@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMBD – LCI 5° Semestre · IPN-UPIICSA</title>
+<style>
+  :root {
+    --bg: #0d1b2a; --card: #142838; --mid: #1a354d;
+    --blue: #1f8ef0; --cyan: #00d4e8; --green: #2ecc71;
+    --orange: #f39c12; --red: #e74c3c; --purple: #9b59b6;
+    --text: #ecf0f1; --sub: #95a5a6; --code-bg: #0a0e1a;
+    --white: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #060e18; font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+
+  /* ── NAV ── */
+  #nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(9,19,30,.97); border-bottom: 1px solid #1a3550;
+    display: flex; align-items: center; gap: 8px; padding: 6px 14px; flex-wrap: wrap; }
+  #nav button { background: var(--mid); border: none; color: var(--sub);
+    padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  #nav button:hover, #nav button.active { background: var(--blue); color: #fff; }
+  #slide-counter { margin-left: auto; color: var(--sub); font-size: 13px; white-space: nowrap; }
+  #nav .sep { width: 1px; height: 20px; background: #1a3550; }
+
+  /* ── DECK ── */
+  #deck { margin-top: 52px; }
+  .slide { display: none; min-height: calc(100vh - 52px); padding: 0 0 30px; }
+  .slide.active { display: block; }
+
+  /* ── HEADER ── */
+  .hdr { padding: 14px 28px 10px; margin-bottom: 18px; }
+  .hdr h1 { font-size: 24px; font-weight: 700; color: #fff; }
+  .hdr p  { font-size: 12px; color: #cce8ff; margin-top: 3px; }
+
+  /* ── LAYOUT ── */
+  .body { padding: 0 28px; }
+  .cols { display: grid; gap: 18px; }
+  .cols-2 { grid-template-columns: 1fr 1fr; }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  /* ── CARDS ── */
+  .card { background: var(--card); border-radius: 8px; overflow: hidden; }
+  .card-hdr { padding: 8px 14px; font-weight: 700; font-size: 13px; color: #fff; }
+  .card-body { padding: 12px 14px; }
+  .card-body p, .card-body li { font-size: 12px; color: var(--text); line-height: 1.6; }
+  .card-body ul { padding-left: 16px; }
+  .card-body li { margin-bottom: 3px; }
+
+  /* ── ROW ITEM ── */
+  .row-item { background: var(--mid); border-radius: 6px; padding: 8px 14px;
+    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .row-item .tag { font-weight: 700; font-size: 12px; min-width: 120px; }
+  .row-item .desc { font-size: 12px; color: var(--sub); }
+
+  /* ── CODE ── */
+  .code-wrap { background: var(--code-bg); border: 1px solid var(--cyan);
+    border-radius: 6px; overflow: auto; }
+  .code-wrap pre { padding: 14px 16px; font-family: 'Consolas','Courier New',monospace;
+    font-size: 12px; color: var(--cyan); line-height: 1.55; white-space: pre; }
+
+  /* ── PORTADA ── */
+  .portada { min-height: calc(100vh - 52px); display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    background: var(--bg); padding: 40px 20px; }
+  .portada h1 { font-size: 52px; font-weight: 900; color: var(--cyan); line-height: 1; }
+  .portada h2 { font-size: 52px; font-weight: 900; color: #fff; }
+  .portada .acr { font-size: 22px; color: var(--blue); font-weight: 700; margin-top: 8px; }
+  .portada .inst { margin-top: 28px; color: var(--sub); font-size: 14px; }
+  .portada .snips { display: flex; gap: 28px; margin-top: 18px; flex-wrap: wrap; justify-content: center; }
+  .portada .snip { color: #254565; font-style: italic; font-size: 12px; }
+
+  /* ── UNIT COVER ── */
+  .unit-cover { min-height: calc(100vh - 52px); display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center; padding: 40px 20px; }
+  .unit-cover .label { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .unit-cover h1 { font-size: 36px; font-weight: 900; color: #fff; max-width: 800px; line-height: 1.2; }
+  .unit-cover .meta { margin-top: 18px; color: var(--sub); font-size: 14px; }
+
+  /* ── ACID ── */
+  .acid-card { background: var(--card); border-radius: 8px; overflow: hidden; display: flex; }
+  .acid-letter { display: flex; align-items: center; justify-content: center;
+    font-size: 48px; font-weight: 900; color: #fff; min-width: 70px; }
+  .acid-body { padding: 12px 14px; }
+  .acid-body h3 { font-size: 14px; font-weight: 700; }
+  .acid-body p  { font-size: 12px; color: var(--text); margin-top: 4px; }
+
+  /* ── REGLAS CODD ── */
+  .codd-item { background: var(--mid); border-radius: 5px; display: flex;
+    align-items: stretch; overflow: hidden; margin-bottom: 5px; }
+  .codd-num { min-width: 42px; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; }
+  .codd-content { padding: 6px 10px; }
+  .codd-content strong { font-size: 11px; display: block; }
+  .codd-content span { font-size: 10.5px; color: var(--sub); }
+
+  /* ── ISOLATION TABLE ── */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--mid); color: var(--cyan); padding: 8px 12px; text-align: left; }
+  td { padding: 7px 12px; border-bottom: 1px solid #1a3550; color: var(--text); }
+  tr:nth-child(even) td { background: #111e2c; }
+
+  /* ── FOOTER ── */
+  .footer { text-align: center; font-size: 10px; color: var(--sub);
+    padding: 10px 28px; margin-top: 24px; border-top: 1px solid #0e1d2b; }
+
+  /* ── KEYBOARD NAV ── */
+  .kbd-hint { position: fixed; bottom: 12px; right: 16px;
+    font-size: 10px; color: #2a4060; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <button onclick="goTo(0)" id="btn-0">Portada</button>
+  <div class="sep"></div>
+  <button onclick="goTo(1)" id="btn-1">Agenda</button>
+  <div class="sep"></div>
+  <button onclick="goTo(2)" id="btn-2">U.I Cover</button>
+  <button onclick="goTo(3)" id="btn-3">1.1 Fundamentos</button>
+  <button onclick="goTo(4)" id="btn-4">1.2 Componentes</button>
+  <button onclick="goTo(5)" id="btn-5">1.3 Codd</button>
+  <button onclick="goTo(6)" id="btn-6">1.4 Tablas/Vistas/Idx</button>
+  <button onclick="goTo(7)" id="btn-7">1.5 SQL/T-SQL</button>
+  <button onclick="goTo(8)" id="btn-8">Ejrc. 1 DDL/DML</button>
+  <div class="sep"></div>
+  <button onclick="goTo(9)" id="btn-9">U.II Cover</button>
+  <button onclick="goTo(10)" id="btn-10">2.1 Consultas</button>
+  <button onclick="goTo(11)" id="btn-11">Ejrc. 2 DQL</button>
+  <button onclick="goTo(12)" id="btn-12">2.2 Seguridad</button>
+  <button onclick="goTo(13)" id="btn-13">2.3 Concurrencia</button>
+  <button onclick="goTo(14)" id="btn-14">2.4 Transacciones</button>
+  <button onclick="goTo(15)" id="btn-15">2.5 SP/Triggers</button>
+  <button onclick="goTo(16)" id="btn-16">Ejrc. 3 SP+Trigger</button>
+  <div class="sep"></div>
+  <button onclick="goTo(17)" id="btn-17">U.III Cover</button>
+  <button onclick="goTo(18)" id="btn-18">3.1 Estructuras</button>
+  <button onclick="goTo(19)" id="btn-19">3.2 Respaldos</button>
+  <button onclick="goTo(20)" id="btn-20">3.3 Import/Export</button>
+  <button onclick="goTo(21)" id="btn-21">3.4 Replicación</button>
+  <button onclick="goTo(22)" id="btn-22">3.5 Mantenimiento</button>
+  <button onclick="goTo(23)" id="btn-23">Ejrc. Final</button>
+  <div class="sep"></div>
+  <button onclick="goTo(24)" id="btn-24">Resumen</button>
+  <span id="slide-counter">1 / 25</span>
+</nav>
+
+<div id="deck">
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 0 — PORTADA
+════════════════════════════════════════════════════════ -->
+<div class="slide active" id="s0">
+  <div class="portada">
+    <h1>SISTEMAS MANEJADORES</h1>
+    <h2>DE BASES DE DATOS</h2>
+    <div class="acr">SMBD</div>
+    <div class="snips">
+      <span class="snip">SELECT * FROM</span>
+      <span class="snip">WHERE condicion</span>
+      <span class="snip">ORDER BY</span>
+      <span class="snip">GROUP BY</span>
+    </div>
+    <div class="inst">
+      Instituto Politécnico Nacional · UPIICSA<br>
+      Licenciatura en Ciencias de la Informática &nbsp;·&nbsp; 5° Semestre &nbsp;·&nbsp; Plan 2021
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 1 — AGENDA
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s1">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>Contenido del Curso</h1>
+    <p>3 Unidades Temáticas · 54 horas teoría · 18 horas práctica</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-3">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">UNIDAD I — Ambiente de los SMBD Relacionales</div>
+        <div class="card-body">
+          <ul>
+            <li>1.1 Fundamentos, operaciones y funciones</li>
+            <li>1.2 Componentes y ambiente de trabajo</li>
+            <li>1.3 Modelo relacional y 12 reglas de Codd</li>
+            <li>1.4 Tablas, Vistas e Índices</li>
+            <li>1.5 SQL estándar y SQL nativo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--cyan);color:#0d1b2a">UNIDAD II — Aspectos básicos y acciones con los SMBD</div>
+        <div class="card-body">
+          <ul>
+            <li>2.1 Consultas simples y multitabla (SQL/DQL)</li>
+            <li>2.2 Seguridad e Integridad (DCL)</li>
+            <li>2.3 Concurrencia y técnicas de bloqueo</li>
+            <li>2.4 Transacciones (TCL)</li>
+            <li>2.5 SP, Disparadores y Cursores</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">UNIDAD III — Funciones de los SMBD Relacionales</div>
+        <div class="card-body">
+          <ul>
+            <li>3.1 Administración de estructuras de almacenamiento</li>
+            <li>3.2 Respaldos y restauración</li>
+            <li>3.3 Importación y exportación de datos</li>
+            <li>3.4 Múltiples servidores y replicación</li>
+            <li>3.5 Utilerías de mantenimiento</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 2 — UNIDAD I COVER
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="unit-cover" style="background:#0a1828">
+    <div class="label" style="color:var(--cyan)">UNIDAD TEMÁTICA I</div>
+    <h1>Ambiente de los Sistemas Manejadores<br>de Bases de Datos Relacionales</h1>
+    <div class="meta">18 horas teoría · 6 horas práctica · 7 horas aprendizaje autónomo</div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 3 — 1.1 FUNDAMENTOS
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>1.1 Fundamentos, Operaciones y Funciones del SMBD</h1>
+    <p>¿Qué es un SMBD y por qué lo necesitamos?</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-hdr" style="background:var(--mid);color:var(--cyan)">¿Qué es un SMBD?</div>
+          <div class="card-body">
+            <p>Un Sistema Manejador de Bases de Datos (SMBD) es un software que permite crear, administrar y manipular bases de datos de manera eficiente, segura y confiable. Actúa como interfaz entre los usuarios y los datos almacenados.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr" style="background:var(--mid);color:var(--cyan)">Funciones principales</div>
+          <div class="card-body" style="padding:10px 14px">
+            <div class="row-item"><span class="tag" style="color:var(--blue)">Definición de datos</span><span class="desc">DDL: CREATE, ALTER, DROP</span></div>
+            <div class="row-item"><span class="tag" style="color:var(--blue)">Manipulación</span><span class="desc">DML: INSERT, UPDATE, DELETE, SELECT</span></div>
+            <div class="row-item"><span class="tag" style="color:var(--blue)">Control de acceso</span><span class="desc">DCL: GRANT, REVOKE</span></div>
+            <div class="row-item"><span class="tag" style="color:var(--blue)">Integridad</span><span class="desc">Constraints, Foreign Keys, Triggers</span></div>
+            <div class="row-item"><span class="tag" style="color:var(--blue)">Concurrencia</span><span class="desc">Bloqueos, MVCC, aislamiento</span></div>
+            <div class="row-item"><span class="tag" style="color:var(--blue)">Recuperación</span><span class="desc">Backup, restore, logs de transacciones</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--mid);color:var(--orange)">SMBD Populares</div>
+        <div class="card-body">
+          <div class="row-item" style="border-left:4px solid var(--blue);padding-left:12px">
+            <div><span class="tag" style="color:var(--blue)">SQL Server</span><span class="desc" style="display:block">Microsoft · Empresarial · Windows/Linux</span></div>
+          </div>
+          <div class="row-item" style="border-left:4px solid var(--orange);padding-left:12px">
+            <div><span class="tag" style="color:var(--orange)">Oracle DB</span><span class="desc" style="display:block">Oracle · Corporativo · Multiplataforma</span></div>
+          </div>
+          <div class="row-item" style="border-left:4px solid var(--green);padding-left:12px">
+            <div><span class="tag" style="color:var(--green)">MySQL</span><span class="desc" style="display:block">Oracle/MariaDB · Open Source · Web</span></div>
+          </div>
+          <div class="row-item" style="border-left:4px solid var(--cyan);padding-left:12px">
+            <div><span class="tag" style="color:var(--cyan)">PostgreSQL</span><span class="desc" style="display:block">PostgreSQL · Open Source · Avanzado</span></div>
+          </div>
+          <div class="row-item" style="border-left:4px solid var(--purple);padding-left:12px">
+            <div><span class="tag" style="color:var(--purple)">SQLite</span><span class="desc" style="display:block">Embebido · Móvil y escritorio ligero</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 4 — 1.2 COMPONENTES
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>1.2 Componentes y Ambiente de Trabajo del SMBD</h1>
+    <p>Arquitectura de SQL Server · Motor, instancias y herramientas</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">Motor de BD — Database Engine</div>
+        <div class="card-body"><p>Componente central: procesa consultas, gestiona almacenamiento y transacciones.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--cyan);color:#0d1b2a">SQL Server Agent — Automatización</div>
+        <div class="card-body"><p>Programación de trabajos, alertas y mantenimiento automático.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">SQL Server Integration Services — SSIS</div>
+        <div class="card-body"><p>ETL: extracción, transformación y carga de datos entre fuentes heterogéneas.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--orange)">SQL Server Reporting Services — SSRS</div>
+        <div class="card-body"><p>Generación de reportes y dashboards analíticos para usuarios de negocio.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr" style="background:var(--purple)">SQL Server Analysis Services — SSAS</div>
+      <div class="card-body"><p>OLAP y minería de datos para Business Intelligence y análisis multidimensional.</p></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 5 — 1.3 MODELO RELACIONAL / 12 REGLAS DE CODD
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>1.3 Modelo Relacional y las 12 Reglas de Codd</h1>
+    <p>Fundamentos matemáticos · Álgebra relacional · E.F. Codd (1970)</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R0</div><div class="codd-content"><strong style="color:var(--cyan)">Regla base</strong><span>Todo SGBD relacional administra su BD usando sus facilidades relacionales.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R1</div><div class="codd-content"><strong style="color:var(--cyan)">Información</strong><span>Toda información se representa por valores en tablas.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R2</div><div class="codd-content"><strong style="color:var(--cyan)">Acceso garantizado</strong><span>Todo dato es accesible por nombre de tabla, PK y nombre de columna.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R3</div><div class="codd-content"><strong style="color:var(--cyan)">Tratamiento NULLs</strong><span>NULLs representan ausencia de información independiente del tipo de dato.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R4</div><div class="codd-content"><strong style="color:var(--cyan)">Catálogo activo</strong><span>La descripción de la BD se representa igual que los datos ordinarios.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R5</div><div class="codd-content"><strong style="color:var(--cyan)">Sublenguaje</strong><span>Debe haber al menos un lenguaje completo (SQL) para definir y manipular datos.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R6</div><div class="codd-content"><strong style="color:var(--cyan)">Actualización de vistas</strong><span>Todas las vistas que son teóricamente actualizables deben serlo.</span></div></div>
+      </div>
+      <div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R7</div><div class="codd-content"><strong style="color:var(--cyan)">Inserción y borrado</strong><span>Soporte completo para INSERT, UPDATE y DELETE a nivel de conjunto.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R8</div><div class="codd-content"><strong style="color:var(--cyan)">Independencia física</strong><span>Cambios en almacenamiento físico no afectan aplicaciones.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R9</div><div class="codd-content"><strong style="color:var(--cyan)">Independencia lógica</strong><span>Cambios en tablas base no afectan las aplicaciones.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R10</div><div class="codd-content"><strong style="color:var(--cyan)">Independencia integridad</strong><span>Las restricciones de integridad se definen en el catálogo, no en apps.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R11</div><div class="codd-content"><strong style="color:var(--cyan)">Independencia distribución</strong><span>La distribución debe ser transparente para el usuario final.</span></div></div>
+        <div class="codd-item"><div class="codd-num" style="background:var(--blue)">R12</div><div class="codd-content"><strong style="color:var(--cyan)">No subversión</strong><span>Si hay interfaz de bajo nivel, no puede saltarse las reglas de integridad.</span></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 6 — 1.4 TABLAS / VISTAS / ÍNDICES
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>1.4 Tipos y Características de Tablas, Vistas e Índices</h1>
+    <p>Objetos fundamentales de una base de datos relacional</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-3">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">TABLAS</div>
+        <div class="card-body">
+          <p style="margin-bottom:8px">Objeto base que almacena datos en filas y columnas.</p>
+          <p style="color:var(--cyan);font-weight:700;margin-bottom:4px">Tipos:</p>
+          <ul>
+            <li>Table base: almacenamiento permanente</li>
+            <li>Tabla temporal local (#tabla)</li>
+            <li>Tabla temporal global (##tabla)</li>
+            <li>Tabla de sistema (sys.*)</li>
+          </ul>
+          <p style="color:var(--cyan);font-weight:700;margin:8px 0 4px">Restricciones:</p>
+          <ul>
+            <li>PRIMARY KEY – unicidad e identificación</li>
+            <li>FOREIGN KEY – integridad referencial</li>
+            <li>UNIQUE – valores únicos por columna</li>
+            <li>CHECK – validación de dominio</li>
+            <li>DEFAULT – valor por omisión</li>
+            <li>NOT NULL – obligatoriedad</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--cyan);color:#0d1b2a">VISTAS</div>
+        <div class="card-body">
+          <p style="margin-bottom:8px">Tabla virtual basada en una consulta SELECT.</p>
+          <p style="color:var(--cyan);font-weight:700;margin-bottom:4px">Ventajas:</p>
+          <ul>
+            <li>Seguridad: oculta columnas sensibles</li>
+            <li>Simplificación de consultas complejas</li>
+            <li>Independencia lógica de datos</li>
+            <li>Reutilización de lógica</li>
+          </ul>
+          <p style="color:var(--cyan);font-weight:700;margin:8px 0 4px">Tipos en SQL Server:</p>
+          <ul>
+            <li>Vista estándar</li>
+            <li>Vista indizada (materializada)</li>
+            <li>Vista particionada</li>
+            <li>Vista con SCHEMABINDING</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">ÍNDICES</div>
+        <div class="card-body">
+          <p style="margin-bottom:8px">Estructura que acelera la búsqueda de datos.</p>
+          <p style="color:var(--green);font-weight:700;margin-bottom:4px">Tipos:</p>
+          <ul>
+            <li>Clustered: ordena físicamente la tabla (1 por tabla)</li>
+            <li>Non-Clustered: punteros a las filas</li>
+            <li>Único (UNIQUE)</li>
+            <li>Filtrado (WHERE en el índice)</li>
+            <li>Columnstore: para BI y analítica</li>
+          </ul>
+          <p style="color:var(--green);font-weight:700;margin:8px 0 4px">Cuándo crear:</p>
+          <ul>
+            <li>Columnas en WHERE frecuentes</li>
+            <li>Columnas en JOIN</li>
+            <li>Columnas en ORDER BY / GROUP BY</li>
+          </ul>
+          <p style="color:var(--orange);font-size:11px;margin-top:6px">⚠ Evitar sobre-indexación (costo en escritura)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 7 — 1.5 SQL ESTÁNDAR / T-SQL
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>1.5 SQL Estándar y SQL Nativo (T-SQL)</h1>
+    <p>ANSI SQL vs. Transact-SQL · Categorías del lenguaje</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">DDL — Data Definition Language<br><small style="font-weight:400;font-size:11px">Definición de estructuras</small></div>
+        <div class="card-body"><ul><li>CREATE TABLE / DATABASE / INDEX / VIEW</li><li>ALTER TABLE (agregar/modificar columnas)</li><li>DROP TABLE / DATABASE / VIEW</li><li>TRUNCATE TABLE</li></ul></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">DML — Data Manipulation Language<br><small style="font-weight:400;font-size:11px">Manipulación de datos</small></div>
+        <div class="card-body"><ul><li>SELECT – consulta de datos</li><li>INSERT INTO – inserción</li><li>UPDATE SET – actualización</li><li>DELETE FROM – eliminación</li></ul></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--orange)">DCL — Data Control Language<br><small style="font-weight:400;font-size:11px">Control de acceso</small></div>
+        <div class="card-body"><ul><li>GRANT – otorgar permisos</li><li>REVOKE – revocar permisos</li><li>DENY – denegar permisos (T-SQL)</li></ul></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--purple)">TCL — Transaction Control Language<br><small style="font-weight:400;font-size:11px">Control de transacciones</small></div>
+        <div class="card-body"><ul><li>BEGIN TRANSACTION</li><li>COMMIT TRANSACTION</li><li>ROLLBACK TRANSACTION</li><li>SAVEPOINT (T-SQL: SAVE TRAN)</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 8 — EJERCICIO 1 DDL/DML
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="hdr" style="background:var(--orange)">
+    <h1>Ejercicio 1 – Creación y Manipulación Básica (DDL/DML)</h1>
+    <p>SQL Server · Práctica 1 · Unidad I · Escenario: Sistema de Control Escolar</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- 1. Crear la base de datos
+CREATE DATABASE ControlEscolar;
+GO
+USE ControlEscolar;
+GO
+
+-- 2. Tabla Carrera
+CREATE TABLE Carrera (
+    idCarrera   INT         PRIMARY KEY IDENTITY(1,1),
+    nombre      VARCHAR(80) NOT NULL,
+    clave       CHAR(5)     UNIQUE NOT NULL
+);
+
+-- 3. Tabla Estudiante
+CREATE TABLE Estudiante (
+    boleta      CHAR(10)    PRIMARY KEY,
+    nombre      VARCHAR(60) NOT NULL,
+    apellidos   VARCHAR(80) NOT NULL,
+    idCarrera   INT         NOT NULL,
+    semestre    TINYINT     CHECK (semestre BETWEEN 1 AND 12),
+    promedio    DECIMAL(4,2),
+    CONSTRAINT fk_carrera FOREIGN KEY (idCarrera)
+        REFERENCES Carrera(idCarrera)
+);</pre></div>
+      <div class="code-wrap"><pre>-- 4. Insertar datos
+INSERT INTO Carrera VALUES
+    ('Lic. en Ciencias de la Informática','LCI'),
+    ('Ingeniería en Sistemas','IIS');
+
+INSERT INTO Estudiante VALUES
+    ('2021630001','Ana','García López',1,5,9.2),
+    ('2021630002','Luis','Martínez',1,5,8.8),
+    ('2022630010','María','Pérez Cruz',2,3,NULL);
+
+-- 5. Consulta básica
+SELECT e.boleta,
+       e.nombre + ' ' + e.apellidos AS alumno,
+       c.nombre AS carrera,
+       e.semestre, e.promedio
+FROM   Estudiante e
+JOIN   Carrera c ON e.idCarrera = c.idCarrera
+ORDER BY e.promedio DESC;
+
+-- 6. Actualización y eliminación
+UPDATE Estudiante
+SET    promedio = 9.5
+WHERE  boleta = '2021630001';</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 9 — UNIDAD II COVER
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s9">
+  <div class="unit-cover" style="background:#06141e">
+    <div class="label" style="color:#0d1b2a;background:var(--cyan);padding:4px 18px;border-radius:4px">UNIDAD TEMÁTICA II</div>
+    <h1 style="margin-top:14px">Aspectos Básicos y Acciones con<br>los Sistemas Manejadores de Bases de Datos</h1>
+    <div class="meta">18 horas teoría · 6 horas práctica · 7 horas aprendizaje autónomo</div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 10 — 2.1 CONSULTAS
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s10">
+  <div class="hdr" style="background:var(--cyan);color:#0d1b2a">
+    <h1 style="color:#0d1b2a">2.1 Consultas Simples y Multitabla (SQL/DQL)</h1>
+    <p style="color:#1a3a4a">SELECT · Cláusulas · Funciones de agregado · JOINs</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div>
+        <p style="color:var(--cyan);font-weight:700;margin-bottom:8px">Estructura completa de SELECT:</p>
+        <div class="code-wrap" style="margin-bottom:14px"><pre>SELECT  [DISTINCT] columnas | expresiones | funciones
+FROM    tabla_principal
+  [INNER | LEFT | RIGHT | FULL JOIN tabla2 ON condicion]
+WHERE   condicion_filtro
+GROUP BY columnas_agrupacion
+HAVING  condicion_sobre_grupo
+ORDER BY columna [ASC | DESC]
+OFFSET  n ROWS FETCH NEXT m ROWS ONLY; -- paginación T-SQL</pre></div>
+        <p style="color:var(--cyan);font-weight:700;margin-bottom:8px">Tipos de JOIN:</p>
+        <div class="row-item"><span class="tag" style="color:var(--blue)">INNER JOIN</span><span class="desc">Solo filas con coincidencia en ambas tablas</span></div>
+        <div class="row-item"><span class="tag" style="color:var(--green)">LEFT JOIN</span><span class="desc">Todas las filas izquierda + coincidencias derecha</span></div>
+        <div class="row-item"><span class="tag" style="color:var(--orange)">RIGHT JOIN</span><span class="desc">Todas las filas derecha + coincidencias izquierda</span></div>
+        <div class="row-item"><span class="tag" style="color:var(--purple)">FULL JOIN</span><span class="desc">Todas las filas de ambas tablas</span></div>
+        <div class="row-item"><span class="tag" style="color:var(--red)">CROSS JOIN</span><span class="desc">Producto cartesiano (todas las combinaciones)</span></div>
+        <div class="row-item"><span class="tag" style="color:var(--cyan)">SELF JOIN</span><span class="desc">La tabla se une consigo misma</span></div>
+      </div>
+      <div>
+        <p style="color:var(--cyan);font-weight:700;margin-bottom:8px">Funciones de Agregado y Subconsultas:</p>
+        <div class="code-wrap"><pre>-- Funciones de agregado
+SELECT
+    c.nombre                    AS carrera,
+    COUNT(e.boleta)             AS total_alumnos,
+    AVG(e.promedio)             AS promedio_grupo,
+    MAX(e.promedio)             AS mejor_promedio,
+    MIN(e.promedio)             AS menor_promedio,
+    SUM(CASE WHEN e.promedio >= 6
+             THEN 1 ELSE 0 END) AS aprobados
+FROM   Carrera c
+LEFT   JOIN Estudiante e ON c.idCarrera = e.idCarrera
+GROUP  BY c.nombre
+HAVING AVG(e.promedio) > 7.5
+ORDER  BY promedio_grupo DESC;
+
+-- Subconsulta correlacionada
+SELECT nombre, apellidos, promedio
+FROM   Estudiante
+WHERE  promedio = (
+    SELECT MAX(promedio) FROM Estudiante
+);
+
+-- CTE (Common Table Expression)
+WITH TopAlumnos AS (
+    SELECT TOP 5 * FROM Estudiante
+    ORDER BY promedio DESC
+)
+SELECT * FROM TopAlumnos;</pre></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 11 — EJERCICIO 2 DQL
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="hdr" style="background:var(--orange)">
+    <h1>Ejercicio 2 – Consultas Multitabla y Vistas (DQL)</h1>
+    <p>SQL Server · Práctica 2 · Unidad II · Escenario: Base de datos de Ventas (Northwind simplificada)</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- Crear vista de resumen de ventas
+CREATE VIEW vw_ResumenVentas AS
+SELECT
+    p.idProducto,
+    p.nombre            AS producto,
+    c.nombre            AS categoria,
+    SUM(d.cantidad)     AS total_vendido,
+    SUM(d.cantidad * d.precioUnitario
+        * (1 - d.descuento)) AS ingreso_neto,
+    AVG(d.precioUnitario)   AS precio_promedio
+FROM   Productos p
+JOIN   Categorias c ON p.idCategoria = c.idCategoria
+JOIN   DetalleOrden d ON p.idProducto = d.idProducto
+GROUP  BY p.idProducto, p.nombre, c.nombre;
+GO
+
+-- Usar la vista
+SELECT TOP 10 *
+FROM   vw_ResumenVentas
+ORDER  BY ingreso_neto DESC;</pre></div>
+      <div class="code-wrap"><pre>-- Ranking con funciones de ventana
+SELECT
+    producto,
+    categoria,
+    total_vendido,
+    ingreso_neto,
+    RANK() OVER (ORDER BY ingreso_neto DESC)
+            AS ranking_global,
+    RANK() OVER (PARTITION BY categoria
+                 ORDER BY ingreso_neto DESC)
+            AS ranking_por_categoria,
+    ROUND(ingreso_neto * 100.0 /
+        SUM(ingreso_neto) OVER (), 2)
+            AS pct_del_total
+FROM vw_ResumenVentas;
+
+-- Ejercicios propuestos:
+-- 1. Listar clientes sin órdenes (LEFT JOIN + IS NULL)
+-- 2. Calcular el promedio móvil de ventas mensuales
+-- 3. Productos con ventas por encima del promedio
+--    de su categoría (subconsulta)
+-- 4. Crear índice en columna de fecha de orden
+CREATE NONCLUSTERED INDEX ix_orden_fecha
+ON Ordenes(fechaOrden);</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 12 — 2.2 SEGURIDAD
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s12">
+  <div class="hdr" style="background:var(--cyan);color:#0d1b2a">
+    <h1 style="color:#0d1b2a">2.2 Seguridad e Integridad en los SMBD</h1>
+    <p style="color:#1a3a4a">DCL · Usuarios · Roles · Permisos · Integridad referencial</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div>
+        <p style="color:var(--cyan);font-weight:700;margin-bottom:8px">Seguridad en SQL Server:</p>
+        <div class="code-wrap"><pre>-- Crear login (a nivel servidor)
+CREATE LOGIN JuanDBA
+WITH PASSWORD = 'P@ssw0rd2024!';
+
+-- Crear usuario en la BD
+USE ControlEscolar;
+CREATE USER JuanDBA FOR LOGIN JuanDBA;
+
+-- Crear rol personalizado
+CREATE ROLE rol_consultas;
+
+-- Asignar permisos al rol
+GRANT SELECT ON Estudiante TO rol_consultas;
+GRANT SELECT ON Carrera    TO rol_consultas;
+GRANT EXECUTE ON sp_reporte TO rol_consultas;
+
+-- Agregar usuario al rol
+ALTER ROLE rol_consultas ADD MEMBER JuanDBA;
+
+-- Denegar acceso sensible
+DENY SELECT ON dbo.Salarios TO JuanDBA;
+
+-- Revocar permiso
+REVOKE INSERT ON Estudiante FROM JuanDBA;
+
+-- Verificar permisos efectivos
+EXECUTE AS USER = 'JuanDBA';
+SELECT * FROM fn_my_permissions(NULL,'DATABASE');
+REVERT;</pre></div>
+      </div>
+      <div>
+        <p style="color:var(--green);font-weight:700;margin-bottom:8px">Tipos de Integridad de Datos:</p>
+        <div class="row-item" style="margin-bottom:8px"><span class="tag" style="color:var(--blue)">Entidad</span><span class="desc">PRIMARY KEY garantiza unicidad de cada fila</span></div>
+        <div class="row-item" style="margin-bottom:8px"><span class="tag" style="color:var(--green)">Dominio</span><span class="desc">CHECK, DEFAULT, NOT NULL validan valores por columna</span></div>
+        <div class="row-item" style="margin-bottom:8px"><span class="tag" style="color:var(--cyan)">Referencial</span><span class="desc">FOREIGN KEY mantiene consistencia entre tablas</span></div>
+        <div class="row-item" style="margin-bottom:10px"><span class="tag" style="color:var(--orange)">Usuario</span><span class="desc">Reglas de negocio via triggers y stored procedures</span></div>
+        <div class="code-wrap"><pre>-- FK con acción referencial
+ALTER TABLE Inscripcion
+ADD CONSTRAINT fk_est
+    FOREIGN KEY (boleta)
+    REFERENCES Estudiante(boleta)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL;
+
+-- Trigger de integridad de negocio
+CREATE TRIGGER trg_ValidarSemestre
+ON Estudiante AFTER INSERT, UPDATE AS
+BEGIN
+    IF EXISTS (SELECT 1 FROM inserted
+               WHERE semestre > 12)
+    BEGIN
+        ROLLBACK;
+        RAISERROR('Semestre inválido',16,1);
+    END
+END;</pre></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 13 — 2.3 CONCURRENCIA
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s13">
+  <div class="hdr" style="background:var(--cyan);color:#0d1b2a">
+    <h1 style="color:#0d1b2a">2.3 Concurrencia y Técnicas de Bloqueo</h1>
+    <p style="color:#1a3a4a">Problemas de concurrencia · Niveles de aislamiento · Deadlocks</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-4" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--red)">Lectura Sucia (Dirty Read)</div>
+        <div class="card-body"><p>T2 lee datos modificados por T1 que aún no se han confirmado (COMMIT).</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--orange)">Lectura No Repetible</div>
+        <div class="card-body"><p>T2 lee el mismo dato dos veces y obtiene valores diferentes porque T1 lo modificó entre lecturas.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--purple)">Lectura Fantasma (Phantom)</div>
+        <div class="card-body"><p>T2 ejecuta la misma consulta dos veces y obtiene filas distintas porque T1 insertó/eliminó filas.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--red)">Actualización Perdida</div>
+        <div class="card-body"><p>T1 y T2 leen el mismo dato, ambos lo modifican; la actualización de T1 se sobreescribe por T2.</p></div>
+      </div>
+    </div>
+    <div class="cols cols-2">
+      <div>
+        <p style="color:var(--cyan);font-weight:700;margin-bottom:8px">Niveles de Aislamiento en SQL Server:</p>
+        <table>
+          <tr><th>Nivel</th><th>Dirty</th><th>N.Repetible</th><th>Phantom</th></tr>
+          <tr><td style="color:var(--red)">READ UNCOMMITTED</td><td style="color:var(--red)">✗</td><td style="color:var(--red)">✗</td><td style="color:var(--red)">✗</td></tr>
+          <tr><td style="color:var(--orange)">READ COMMITTED</td><td style="color:var(--green)">✓</td><td style="color:var(--red)">✗</td><td style="color:var(--red)">✗</td></tr>
+          <tr><td style="color:var(--green)">REPEATABLE READ</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--red)">✗</td></tr>
+          <tr><td style="color:var(--cyan)">SERIALIZABLE</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+          <tr><td style="color:var(--blue)">SNAPSHOT (MVCC)</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td><td style="color:var(--green)">✓</td></tr>
+        </table>
+      </div>
+      <div class="code-wrap"><pre>-- Establecer nivel de aislamiento
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- Detectar bloqueos activos
+SELECT  r.session_id, r.blocking_session_id,
+        r.wait_type, r.wait_time,
+        t.text AS consulta_bloqueada
+FROM    sys.dm_exec_requests r
+CROSS   APPLY sys.dm_exec_sql_text(r.sql_handle) t
+WHERE   r.blocking_session_id > 0;
+
+-- Terminar sesión bloqueante
+KILL 55;  -- reemplazar con el session_id real
+
+-- Usar SNAPSHOT para evitar bloqueos de lectura
+ALTER DATABASE ControlEscolar
+SET READ_COMMITTED_SNAPSHOT ON;</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 14 — 2.4 TRANSACCIONES
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s14">
+  <div class="hdr" style="background:var(--cyan);color:#0d1b2a">
+    <h1 style="color:#0d1b2a">2.4 Transacciones y Uso de Instrucciones SQL (TCL)</h1>
+    <p style="color:#1a3a4a">Propiedades ACID · BEGIN / COMMIT / ROLLBACK · SAVEPOINT</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-4" style="margin-bottom:16px">
+      <div class="acid-card">
+        <div class="acid-letter" style="background:var(--red)">A</div>
+        <div class="acid-body"><h3 style="color:var(--red)">Atomicidad</h3><p>Todo o nada: si una operación falla, se revierte todo.</p></div>
+      </div>
+      <div class="acid-card">
+        <div class="acid-letter" style="background:var(--green)">C</div>
+        <div class="acid-body"><h3 style="color:var(--green)">Consistencia</h3><p>La BD pasa de un estado válido a otro estado válido.</p></div>
+      </div>
+      <div class="acid-card">
+        <div class="acid-letter" style="background:var(--blue)">I</div>
+        <div class="acid-body"><h3 style="color:var(--blue)">Aislamiento</h3><p>Las transacciones concurrentes no se interfieren entre sí.</p></div>
+      </div>
+      <div class="acid-card">
+        <div class="acid-letter" style="background:var(--orange)">D</div>
+        <div class="acid-body"><h3 style="color:var(--orange)">Durabilidad</h3><p>Los cambios confirmados persisten ante fallos del sistema.</p></div>
+      </div>
+    </div>
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- Transacción con manejo de errores (T-SQL moderno)
+BEGIN TRY
+    BEGIN TRANSACTION;
+
+    -- Transferencia bancaria: descontar de cuenta origen
+    UPDATE Cuenta
+    SET    saldo = saldo - 5000
+    WHERE  noCuenta = '1234-5678';
+
+    -- Verificar fondos suficientes
+    IF (SELECT saldo FROM Cuenta
+        WHERE noCuenta = '1234-5678') < 0
+        THROW 50001, 'Saldo insuficiente', 1;
+
+    -- Abonar a cuenta destino
+    UPDATE Cuenta
+    SET    saldo = saldo + 5000
+    WHERE  noCuenta = '8765-4321';
+
+    -- Registrar movimiento
+    INSERT INTO Movimientos (origen, destino, monto, fecha)
+    VALUES ('1234-5678','8765-4321',5000,GETDATE());
+
+    COMMIT TRANSACTION;
+    PRINT 'Transferencia exitosa';
+
+END TRY
+BEGIN CATCH
+    ROLLBACK TRANSACTION;
+    PRINT 'Error: ' + ERROR_MESSAGE();
+    THROW; -- re-lanzar el error
+END CATCH;</pre></div>
+      <div class="code-wrap"><pre>-- SAVEPOINT (puntos de guardado)
+BEGIN TRANSACTION;
+    INSERT INTO Pedido VALUES (...);
+    SAVE TRANSACTION sp_pedido;
+
+    INSERT INTO DetallePedido VALUES (...);
+
+    IF @@ERROR <> 0
+    BEGIN
+        -- Regresa al savepoint, no a inicio
+        ROLLBACK TRANSACTION sp_pedido;
+        PRINT 'Detalle falló, pedido conservado';
+    END
+    ELSE
+        COMMIT TRANSACTION;
+
+-- Transacción implícita vs explícita
+SET IMPLICIT_TRANSACTIONS ON;
+-- Cada INSERT/UPDATE/DELETE abre una transacción.
+-- Se requiere COMMIT o ROLLBACK manual.</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 15 — 2.5 SP / TRIGGERS / CURSORES
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s15">
+  <div class="hdr" style="background:var(--cyan);color:#0d1b2a">
+    <h1 style="color:#0d1b2a">2.5 Procedimientos Almacenados, Disparadores y Cursores</h1>
+    <p style="color:#1a3a4a">SP · Triggers · Cursores · Funciones · SQL Server</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- Stored Procedure con parámetros I/O
+CREATE PROCEDURE sp_RegistrarEstudiante
+    @boleta    CHAR(10),
+    @nombre    VARCHAR(60),
+    @apellidos VARCHAR(80),
+    @idCarrera INT,
+    @resultado INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF EXISTS (SELECT 1 FROM Estudiante
+               WHERE boleta = @boleta)
+    BEGIN
+        SET @resultado = -1; -- ya existe
+        RETURN;
+    END
+    INSERT INTO Estudiante
+        (boleta,nombre,apellidos,idCarrera)
+    VALUES
+        (@boleta,@nombre,@apellidos,@idCarrera);
+    SET @resultado = @@ROWCOUNT;
+END;
+GO
+-- Ejecutar SP
+DECLARE @res INT;
+EXEC sp_RegistrarEstudiante
+    '2024630001','Pedro','López',1,@res OUTPUT;
+SELECT @res AS filas_afectadas;</pre></div>
+      <div class="code-wrap"><pre>-- Trigger AFTER INSERT/UPDATE/DELETE (auditoría)
+CREATE TRIGGER trg_AuditoriaEstudiante
+ON Estudiante
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO Auditoria
+        (tabla,operacion,datos_nuevos,fecha,usuario)
+    SELECT 'Estudiante','INSERT',
+           CONCAT(boleta,' ',nombre),
+           GETDATE(), SUSER_SNAME()
+    FROM   inserted;
+
+    INSERT INTO Auditoria
+        (tabla,operacion,datos_viejos,fecha,usuario)
+    SELECT 'Estudiante','DELETE',
+           CONCAT(boleta,' ',nombre),
+           GETDATE(), SUSER_SNAME()
+    FROM   deleted;
+END;
+GO
+-- Cursor: procesar fila por fila
+DECLARE cur_alumnos CURSOR FOR
+    SELECT boleta, promedio FROM Estudiante;
+DECLARE @bol CHAR(10), @prom DECIMAL(4,2);
+OPEN cur_alumnos;
+FETCH NEXT FROM cur_alumnos INTO @bol,@prom;
+WHILE @@FETCH_STATUS = 0 BEGIN
+    PRINT @bol + ': ' + CAST(@prom AS VARCHAR);
+    FETCH NEXT FROM cur_alumnos INTO @bol,@prom;
+END;
+CLOSE cur_alumnos; DEALLOCATE cur_alumnos;</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 16 — EJERCICIO 3 SP + TRIGGER
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s16">
+  <div class="hdr" style="background:var(--orange)">
+    <h1>Ejercicio 3 – Procedimientos Almacenados y Triggers</h1>
+    <p>SQL Server · Práctica 2 · Unidad II · Escenario: Sistema de Inventario con auditoría automática</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- Tablas del sistema de inventario
+CREATE TABLE Producto (
+    idProd   INT PRIMARY KEY IDENTITY,
+    nombre   VARCHAR(80) NOT NULL,
+    precio   DECIMAL(10,2) NOT NULL,
+    stock    INT NOT NULL DEFAULT 0,
+    CONSTRAINT ck_stock CHECK (stock >= 0)
+);
+
+CREATE TABLE MovInventario (
+    idMov    INT PRIMARY KEY IDENTITY,
+    idProd   INT REFERENCES Producto(idProd),
+    tipo     CHAR(1) CHECK (tipo IN ('E','S')),
+    cantidad INT NOT NULL,
+    stockAnt INT, stockNuevo INT,
+    fecha    DATETIME DEFAULT GETDATE(),
+    usuario  VARCHAR(50) DEFAULT SUSER_SNAME()
+);
+
+-- SP para registrar entrada de stock
+CREATE PROCEDURE sp_EntradaStock
+    @idProd  INT,
+    @cantidad INT
+AS BEGIN
+    DECLARE @stockAnt INT;
+    SELECT @stockAnt = stock
+    FROM   Producto WHERE idProd = @idProd;
+
+    UPDATE Producto
+    SET    stock = stock + @cantidad
+    WHERE  idProd = @idProd;
+
+    INSERT INTO MovInventario
+        (idProd,tipo,cantidad,stockAnt,stockNuevo)
+    VALUES (@idProd,'E',@cantidad,
+            @stockAnt, @stockAnt+@cantidad);
+END;</pre></div>
+      <div class="code-wrap"><pre>-- Trigger para salida con validación
+CREATE TRIGGER trg_ValidarSalida
+ON MovInventario
+INSTEAD OF INSERT AS
+BEGIN
+    DECLARE @id INT, @tipo CHAR(1),
+            @cant INT, @stock INT;
+
+    SELECT @id=idProd, @tipo=tipo, @cant=cantidad
+    FROM   inserted;
+
+    SELECT @stock = stock FROM Producto
+    WHERE  idProd = @id;
+
+    IF @tipo = 'S' AND @stock < @cant
+    BEGIN
+        RAISERROR('Stock insuficiente: %d disponible',
+                  16, 1, @stock);
+        RETURN;
+    END
+
+    INSERT INTO MovInventario
+        (idProd,tipo,cantidad,stockAnt,stockNuevo)
+    VALUES (@id, @tipo, @cant, @stock,
+            CASE WHEN @tipo='E'
+                 THEN @stock + @cant
+                 ELSE @stock - @cant END);
+
+    UPDATE Producto
+    SET    stock = CASE WHEN @tipo='E'
+                   THEN stock + @cant
+                   ELSE stock - @cant END
+    WHERE  idProd = @id;
+END;
+
+-- Ejercicios propuestos:
+-- 1. SP que genere reporte de stock < minimo
+-- 2. Trigger que envíe alerta si stock = 0
+-- 3. Función escalar que calcule valor del inventario
+-- 4. Vista consolidada de movimientos del mes</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 17 — UNIDAD III COVER
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s17">
+  <div class="unit-cover" style="background:#081e0f">
+    <div class="label" style="color:#0d1b2a;background:var(--green);padding:4px 18px;border-radius:4px">UNIDAD TEMÁTICA III</div>
+    <h1 style="margin-top:14px">Funciones de los Sistemas Manejadores<br>de Bases de Datos Relacionales</h1>
+    <div class="meta">18 horas teoría · 6 horas práctica · 7 horas aprendizaje autónomo</div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 18 — 3.1 ESTRUCTURAS
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s18">
+  <div class="hdr" style="background:var(--green)">
+    <h1>3.1 Administración de Estructuras y Usuarios</h1>
+    <p>Filegroups · Archivos de datos · Gestión de usuarios y permisos</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- Ver archivos de la BD actual
+SELECT name, physical_name, size/128 AS size_MB,
+       type_desc
+FROM   sys.database_files;
+
+-- Crear BD con múltiples filegroups
+CREATE DATABASE EmpresaDB
+ON PRIMARY (
+    NAME = 'EmpresaDB_Primary',
+    FILENAME = 'C:\Data\EmpresaDB.mdf',
+    SIZE = 100MB, MAXSIZE = 1GB, FILEGROWTH = 50MB
+),
+FILEGROUP FG_Historico (
+    NAME = 'EmpresaDB_Hist',
+    FILENAME = 'D:\Data\EmpresaDB_Hist.ndf',
+    SIZE = 500MB, FILEGROWTH = 100MB
+)
+LOG ON (
+    NAME = 'EmpresaDB_Log',
+    FILENAME = 'L:\Logs\EmpresaDB.ldf',
+    SIZE = 50MB, FILEGROWTH = 25MB
+);
+
+-- Crear tabla en filegroup específico
+CREATE TABLE HistoricoVentas (
+    idVenta INT, fechaVenta DATE, monto DECIMAL(12,2)
+) ON FG_Historico;
+
+-- Expandir base de datos
+ALTER DATABASE EmpresaDB
+MODIFY FILE (NAME='EmpresaDB_Primary', SIZE=200MB);</pre></div>
+      <div class="code-wrap"><pre>-- Arquitectura de seguridad SQL Server
+-- Nivel Servidor: Logins
+CREATE LOGIN AnalystUser
+    WITH PASSWORD = 'An@lyst2024#';
+
+-- Nivel BD: Users
+USE EmpresaDB;
+CREATE USER AnalystUser FOR LOGIN AnalystUser
+WITH DEFAULT_SCHEMA = dbo;
+
+-- Roles predefinidos de servidor:
+-- sysadmin, serveradmin, dbcreator,
+-- diskadmin, processadmin, securityadmin
+
+-- Roles predefinidos de BD:
+-- db_owner, db_datareader, db_datawriter,
+-- db_ddladmin, db_securityadmin
+
+-- Asignar rol de BD
+ALTER ROLE db_datareader ADD MEMBER AnalystUser;
+
+-- Permisos granulares por objeto
+GRANT SELECT ON SCHEMA::dbo TO AnalystUser;
+GRANT EXECUTE ON sp_GenerarReporte TO AnalystUser;
+DENY SELECT ON dbo.DatosPersonales TO AnalystUser;
+
+-- Row-Level Security (seguridad por fila)
+CREATE SECURITY POLICY filtro_vendedor
+ADD FILTER PREDICATE fn_filter(vendedorId)
+ON dbo.Ventas WITH (STATE = ON);</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 19 — 3.2 RESPALDOS
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s19">
+  <div class="hdr" style="background:var(--green)">
+    <h1>3.2 Administración de Respaldos y Restauración</h1>
+    <p>Estrategias de backup · Recovery models · Restauración punto-en-tiempo</p>
+  </div>
+  <div class="body">
+    <p style="color:var(--green);font-weight:700;margin-bottom:10px">Modelos de Recuperación (Recovery Models):</p>
+    <div class="row-item" style="margin-bottom:6px;border-left:4px solid var(--orange)">
+      <span class="tag" style="color:var(--orange);min-width:130px">SIMPLE</span>
+      <span class="desc">Sin log de transacciones persistente. Solo backup FULL/DIFFERENTIAL. No permite restauración punto-en-tiempo.</span>
+    </div>
+    <div class="row-item" style="margin-bottom:6px;border-left:4px solid var(--cyan)">
+      <span class="tag" style="color:var(--cyan);min-width:130px">FULL</span>
+      <span class="desc">Log completo. Permite restauración a cualquier punto en el tiempo. Requiere backup de log periódico para vaciar el log.</span>
+    </div>
+    <div class="row-item" style="margin-bottom:14px;border-left:4px solid var(--blue)">
+      <span class="tag" style="color:var(--blue);min-width:130px">BULK-LOGGED</span>
+      <span class="desc">Minimiza log en operaciones masivas (bulk insert, SELECT INTO). Reduce tamaño del log pero limita restauración exacta.</span>
+    </div>
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- Cambiar modelo de recuperación
+ALTER DATABASE EmpresaDB SET RECOVERY FULL;
+
+-- BACKUP FULL (completo)
+BACKUP DATABASE EmpresaDB
+TO DISK = 'D:\Backups\EmpresaDB_FULL_20240521.bak'
+WITH INIT, COMPRESSION, CHECKSUM,
+     STATS = 10,
+     DESCRIPTION = 'Backup completo semanal';
+
+-- BACKUP DIFFERENTIAL (diferencial)
+BACKUP DATABASE EmpresaDB
+TO DISK = 'D:\Backups\EmpresaDB_DIFF.bak'
+WITH DIFFERENTIAL, COMPRESSION;
+
+-- BACKUP DE LOG DE TRANSACCIONES
+BACKUP LOG EmpresaDB
+TO DISK = 'D:\Backups\EmpresaDB_LOG.bak'
+WITH COMPRESSION, STATS = 5;</pre></div>
+      <div class="code-wrap"><pre>-- Verificar integridad del backup
+RESTORE VERIFYONLY
+FROM DISK = 'D:\Backups\EmpresaDB_FULL.bak';
+
+-- RESTAURACIÓN completa (3 pasos)
+-- Paso 1: Restaurar FULL con NORECOVERY
+RESTORE DATABASE EmpresaDB
+FROM DISK = 'D:\Backups\EmpresaDB_FULL.bak'
+WITH NORECOVERY, REPLACE,
+     MOVE 'EmpresaDB' TO 'C:\Data\EmpresaDB.mdf',
+     MOVE 'EmpresaDB_Log' TO 'L:\Logs\EmpresaDB.ldf';
+
+-- Paso 2: Aplicar DIFFERENTIAL
+RESTORE DATABASE EmpresaDB
+FROM DISK = 'D:\Backups\EmpresaDB_DIFF.bak'
+WITH NORECOVERY;
+
+-- Paso 3: Restaurar LOG hasta punto exacto
+RESTORE LOG EmpresaDB
+FROM DISK = 'D:\Backups\EmpresaDB_LOG.bak'
+WITH RECOVERY,
+     STOPAT = '2024-05-21 09:30:00';</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 20 — 3.3 IMPORT/EXPORT
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s20">
+  <div class="hdr" style="background:var(--green)">
+    <h1>3.3 Importación y Exportación de Datos</h1>
+    <p>BCP · BULK INSERT · OPENROWSET · SSMS Import/Export Wizard</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- BULK INSERT desde CSV
+BULK INSERT Empleados
+FROM 'C:\Data\empleados.csv'
+WITH (
+    FIRSTROW = 2,        -- omitir encabezado
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    CODEPAGE = '65001',  -- UTF-8
+    ERRORFILE = 'C:\Logs\errores_bulk.txt',
+    MAXERRORS = 10,
+    BATCHSIZE = 1000     -- commit por lotes
+);
+
+-- OPENROWSET para leer Excel externo
+SELECT *
+FROM OPENROWSET(
+    'Microsoft.ACE.OLEDB.12.0',
+    'Excel 12.0 Xml;HDR=YES;
+     Database=C:\Data\ventas.xlsx',
+    'SELECT * FROM [Hoja1$]'
+);
+
+-- Exportar con BCP (desde CMD)
+-- bcp EmpresaDB.dbo.Empleados out
+--   C:\Data\emp_export.csv -c -t, -T -S localhost
+
+-- SELECT INTO para copia de tabla
+SELECT *
+INTO EmpresaDB_Backup.dbo.Empleados_bak
+FROM EmpresaDB.dbo.Empleados
+WHERE fechaAlta >= '2024-01-01';</pre></div>
+      <div class="code-wrap"><pre>-- Exportar a formato JSON
+SELECT idEmpleado, nombre, departamento, salario
+FROM   Empleados
+FOR JSON PATH,
+       ROOT('empleados'),
+       INCLUDE_NULL_VALUES;
+
+-- Exportar a formato XML
+SELECT idEmpleado AS "@id",
+       nombre, departamento
+FROM   Empleados
+FOR XML PATH('empleado'), ROOT('empleados');
+
+-- LINKED SERVER para consulta remota
+EXEC sp_addlinkedserver
+    @server = 'SRV_REMOTO',
+    @srvproduct = '',
+    @provider = 'SQLNCLI',
+    @datasrc = '192.168.1.100';
+
+-- Consultar servidor remoto
+SELECT * FROM
+    [SRV_REMOTO].[EmpresaDB].[dbo].[Empleados];
+
+-- Insertar desde servidor remoto
+INSERT INTO Empleados
+SELECT * FROM
+    OPENQUERY(SRV_REMOTO,
+    'SELECT * FROM EmpresaDB.dbo.Empleados
+     WHERE departamento = ''TI''');</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 21 — 3.4 REPLICACIÓN / HA
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s21">
+  <div class="hdr" style="background:var(--green)">
+    <h1>3.4 Múltiples Servidores, Duplicación y Replicación</h1>
+    <p>Always On · Replicación · Mirroring · Log Shipping</p>
+  </div>
+  <div class="body">
+    <p style="color:var(--green);font-weight:700;margin-bottom:10px">Estrategias de Alta Disponibilidad y Replicación:</p>
+    <div class="cols cols-4" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">Snapshot Replication</div>
+        <div class="card-body"><p>Copia periódica completa de los datos. Simple, para datos que cambian poco.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--cyan);color:#0d1b2a">Transactional Replication</div>
+        <div class="card-body"><p>Propaga cambios en tiempo casi real via log de transacciones. Alta disponibilidad.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">Merge Replication</div>
+        <div class="card-body"><p>Bidireccional: publisher y subscriber pueden modificar. Resolución de conflictos.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--orange)">Always On Availability</div>
+        <div class="card-body"><p>Alta disponibilidad y DR. Réplicas secundarias legibles. Failover automático.</p></div>
+      </div>
+    </div>
+    <div class="code-wrap"><pre>-- Crear endpoint para Always On
+CREATE ENDPOINT Hadr_Endpoint
+STATE = STARTED
+AS TCP (LISTENER_PORT = 5022)
+FOR DATABASE_MIRRORING (ROLE = ALL);
+
+-- Agregar BD al grupo de disponibilidad
+ALTER AVAILABILITY GROUP [AG_Produccion] ADD DATABASE EmpresaDB;
+
+-- Ver estado de réplicas
+SELECT ag.name, ar.replica_server_name,
+       ars.role_desc, ars.synchronization_state_desc, ars.connected_state_desc
+FROM   sys.availability_groups ag
+JOIN   sys.availability_replicas ar ON ag.group_id = ar.group_id
+JOIN   sys.dm_hadr_availability_replica_states ars ON ar.replica_id = ars.replica_id;
+
+-- Failover manual
+ALTER AVAILABILITY GROUP [AG_Produccion] FAILOVER;
+
+-- Log Shipping: configurar envío de logs
+EXEC master.dbo.sp_add_log_shipping_primary_database
+    @database = N'EmpresaDB',
+    @backup_directory = N'\\NAS\LogShipping\',
+    @backup_share = N'\\NAS\LogShipping\',
+    @backup_job_name = N'LS_Backup_EmpresaDB';</pre></div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 22 — 3.5 MANTENIMIENTO
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s22">
+  <div class="hdr" style="background:var(--green)">
+    <h1>3.5 Utilerías de Mantenimiento y Herramientas Administrativas</h1>
+    <p>Diagnóstico · Optimización · SQL Server Agent · Mantenimiento programado</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-2">
+      <div class="code-wrap"><pre>-- ===== MANTENIMIENTO DE ÍNDICES =====
+-- Ver fragmentación de índices
+SELECT OBJECT_NAME(i.object_id) AS tabla,
+       i.name AS indice,
+       ips.avg_fragmentation_in_percent AS fragmentacion,
+       ips.page_count
+FROM   sys.dm_db_index_physical_stats(
+           DB_ID(), NULL, NULL, NULL, 'SAMPLED') ips
+JOIN   sys.indexes i
+       ON ips.object_id = i.object_id
+       AND ips.index_id = i.index_id
+WHERE  ips.avg_fragmentation_in_percent > 5
+ORDER  BY fragmentacion DESC;
+
+-- Reorganizar (fragmentación 5-30%)
+ALTER INDEX ix_orden_fecha ON Ordenes REORGANIZE;
+
+-- Reconstruir (fragmentación > 30%)
+ALTER INDEX ix_orden_fecha ON Ordenes
+REBUILD WITH (ONLINE = ON, FILLFACTOR = 80);
+
+-- Actualizar estadísticas
+UPDATE STATISTICS Ordenes WITH FULLSCAN;
+
+-- Script automático de mantenimiento (Ola Hallengren)
+EXEC dbo.IndexOptimize
+    @Databases = 'EmpresaDB',
+    @FragmentationLow = NULL,
+    @FragmentationMedium = 'INDEX_REORGANIZE',
+    @FragmentationHigh = 'INDEX_REBUILD_ONLINE,
+                          INDEX_REBUILD_OFFLINE';</pre></div>
+      <div class="code-wrap"><pre>-- ===== DIAGNÓSTICO Y MONITOREO =====
+-- Top queries por CPU
+SELECT TOP 10
+    qs.total_worker_time / qs.execution_count AS avg_cpu,
+    qs.execution_count,
+    qs.total_elapsed_time / qs.execution_count AS avg_tiempo,
+    SUBSTRING(st.text,
+        (qs.statement_start_offset/2)+1,
+        (CASE qs.statement_end_offset
+            WHEN -1 THEN DATALENGTH(st.text)
+            ELSE qs.statement_end_offset
+        END - qs.statement_start_offset)/2 + 1) AS consulta
+FROM   sys.dm_exec_query_stats qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
+ORDER  BY avg_cpu DESC;
+
+-- Espacio en disco por BD
+EXEC sp_databases;
+
+-- Verificar integridad de la BD
+DBCC CHECKDB('EmpresaDB')
+WITH NO_INFOMSGS, ALL_ERRORMSGS;
+
+-- Shrink seguro del log (solo en emergencia)
+USE EmpresaDB;
+DBCC SHRINKFILE(EmpresaDB_Log, 50);
+
+-- Plan de mantenimiento con SQL Agent
+EXEC msdb.dbo.sp_add_job
+    @job_name = N'Mantenimiento_Semanal';</pre></div>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 23 — EJERCICIO INTEGRADOR FINAL
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s23">
+  <div class="hdr" style="background:var(--orange)">
+    <h1>Ejercicio Integrador – Sistema Hospitalario Completo</h1>
+    <p>SQL Server · Práctica 3 · Unidad III · Proyecto Final</p>
+  </div>
+  <div class="body">
+    <p style="font-size:13px;margin-bottom:14px;color:var(--text)">Desarrolla un sistema completo de hospital que integre todos los temas del curso:</p>
+    <div class="cols cols-3" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">DDL/Modelo</div>
+        <div class="card-body"><p>Crea 6+ tablas (Paciente, Médico, Especialidad, Cita, Diagnóstico, Medicamento) con todas las constraints.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--cyan);color:#0d1b2a">DQL Avanzado</div>
+        <div class="card-body"><p>Vistas: historial_paciente, agenda_medico. CTEs para ranking. Window functions para estadísticas.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">SP completos</div>
+        <div class="card-body"><p>sp_RegistrarCita, sp_AltaHospitalaria, sp_GenerarReceta – todos con manejo de errores TRY/CATCH.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--orange)">Triggers</div>
+        <div class="card-body"><p>Auditoría de cambios en diagnósticos. Validación de citas (no solapamiento). Alerta stock medicamentos.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--purple)">Seguridad</div>
+        <div class="card-body"><p>Roles: medico, enfermero, recepcionista, administrador. Permisos granulares por tabla y vista.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--red)">Respaldo/HA</div>
+        <div class="card-body"><p>Script de backup FULL+LOG. Plan de mantenimiento de índices. Estadísticas de fragmentación.</p></div>
+      </div>
+    </div>
+    <div style="background:#182812;border-radius:6px;padding:12px 18px">
+      <p style="color:var(--green);font-size:12px">
+        <strong>Entrega:</strong> Script SQL completo ejecutable en SQL Server 2019+ · Diagrama ER · Reporte de evidencia con capturas de pantalla de cada funcionalidad probada.
+      </p>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 24 — RESUMEN
+════════════════════════════════════════════════════════ -->
+<div class="slide" id="s24">
+  <div class="hdr" style="background:var(--blue)">
+    <h1>Resumen del Curso – SMBD</h1>
+    <p>Lo aprendido en una sola vista</p>
+  </div>
+  <div class="body">
+    <div class="cols cols-3" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-hdr" style="background:var(--blue)">Unidad I — Fundamentos</div>
+        <div class="card-body">
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Arquitectura de SMBD y SQL Server</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Modelo relacional + 12 Reglas de Codd</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Tablas, Vistas, Índices</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> DDL y DML básico (T-SQL)</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--cyan);color:#0d1b2a">Unidad II — Acciones SQL</div>
+        <div class="card-body">
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Consultas complejas: JOIN, GROUP BY, CTE</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Seguridad: usuarios, roles, permisos</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Concurrencia, bloqueos, niveles aislamiento</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Transacciones ACID, SP, Triggers, Cursores</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" style="background:var(--green)">Unidad III — Administración</div>
+        <div class="card-body">
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Estructuras de almacenamiento y filegroups</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Backup FULL/DIFF/LOG y restauración</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Import/Export: BCP, BULK INSERT, JSON/XML</div>
+          <div class="row-item"><span style="color:var(--green);margin-right:6px">✓</span> Replicación, HA, mantenimiento y monitoreo</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:#101c28;border-radius:6px;padding:10px 18px;text-align:center">
+      <p style="font-size:11px;color:var(--sub)">
+        Bibliografía clave: Connolly &amp; Begg (2005) · Dapena (2021) · Guillenson &amp; Pobiner (2021) · Mannino (2007) · Microsoft SQL Server Docs
+      </p>
+    </div>
+  </div>
+  <div class="footer">SMBD · LCI 5° Semestre · IPN-UPIICSA</div>
+</div>
+
+</div><!-- /deck -->
+
+<div class="kbd-hint">← → para navegar</div>
+
+<script>
+  const TOTAL = 25;
+  let current = 0;
+
+  function goTo(n) {
+    document.getElementById('s' + current).classList.remove('active');
+    document.getElementById('btn-' + current).classList.remove('active');
+    current = Math.max(0, Math.min(TOTAL - 1, n));
+    document.getElementById('s' + current).classList.add('active');
+    document.getElementById('btn-' + current).classList.add('active');
+    document.getElementById('slide-counter').textContent = (current + 1) + ' / ' + TOTAL;
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
+  });
+
+  // mark initial button active
+  document.getElementById('btn-0').classList.add('active');
+</script>
+</body>
+</html>
